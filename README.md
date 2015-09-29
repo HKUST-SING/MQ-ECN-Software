@@ -4,7 +4,7 @@ Under construction.
 #2 How to use
 ##2.1 Compiling
 MQ-ECN software prototype is implemented as a Linux queuing discpline (qdisc) kernel module. So you need the kernel headers to compile it. You can find available headers on your system in `/lib/modules`. To install the kernel headers, you just need to use the following command：
-<pre><code>$ sudo apt-get install linux-headers-$(uname -r)
+<pre><code>$ apt-get install linux-headers-$(uname -r)
 </code></pre>
 
 Then you can compile MQ-ECN kernel module:
@@ -22,7 +22,26 @@ $ insmod sch_dwrr.ko
 $ tc qdisc add dev eth1 root tbf rate 995mbit limit 1000k burst 1000k mtu 66000 peakrate 1000mbit
 </code></pre>
 
-In above example, we install MQ-ECN on eth1. The shaping rate is 995Mbps. To accurately reflect switch buffer occupancy, we usually trade a little bandwidth. 
+In above example, we install MQ-ECN on eth1. The shaping rate is 995Mbps (line rate is 1000Mbps). To accurately reflect switch buffer occupancy, we usually trade a little bandwidth. 
 
 ##2.3 Configuring
-Except for shaping rate, all the properties of MQ-ECN are configured through `sysctl` interfaces. See `params.h` and `params.c` for more details.
+Except for shaping rate, all the parameters of MQ-ECN are configured through `sysctl` interfaces. Here, I only show several important parameters. For the reset, see `params.h` and `params.c` for more details.
+<ul>
+<li>ECN marking scheme:
+<pre><code>$ sysctl dwrr.ecn_scheme
+</code></pre>
+To enable MQ-ECN:
+<pre><code>$ sysctl -w dwrr.ecn_scheme=4
+</code></pre>
+To enable per-queue ECN marking:
+<pre><code>$ sysctl -w dwrr.ecn_scheme=1
+</code></pre>
+</li>
+<li>Per-port ECN marking threshold (bytes):
+<pre><code>$ sysctl dwrr.port_thresh_bytes
+</code></pre>
+To set per-port ECN marking threshold to 32KB:
+<pre><code>$ sysctl -w dwrr.port_thresh_bytes=32000
+</code></pre>
+</li>
+</ul>
