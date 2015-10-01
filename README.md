@@ -1,5 +1,5 @@
 #1 What is MQ-ECN
-Under construction. 
+MQ-ECN is a new ECN marking scheme to enable ECN for multi-service multi-queue production data center networks. 
 
 #2 How to use
 ##2.1 Compiling
