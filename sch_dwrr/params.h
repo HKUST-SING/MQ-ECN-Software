@@ -32,6 +32,8 @@
 #define DWRR_QDISC_MQ_ECN_GENER 3
 /* MQ-ECN for round-robin packet scheduling algorithms */
 #define DWRR_QDISC_MQ_ECN_RR 4
+/* Dequeue latency-based ECN marking. This is a general ECN marking approach for any packet scheduler */
+#define DWRR_QDISC_DEQUE_ECN 5
 
 #define DWRR_QDISC_MAX_ITERATION 10
 
