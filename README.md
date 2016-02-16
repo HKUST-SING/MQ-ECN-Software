@@ -28,22 +28,40 @@ In above example, we install MQ-ECN on eth1. The shaping rate is 995Mbps (line r
 
 ##2.3 Configuring
 Except for shaping rate, all the parameters of MQ-ECN are configured through `sysctl` interfaces. Here, I only show several important parameters. For the reset, see `params.h` and `params.c` for more details.
+
 <ul>
 <li>ECN marking scheme:
 <pre><code>$ sysctl dwrr.ecn_scheme
 </code></pre>
-To enable MQ-ECN:
-<pre><code>$ sysctl -w dwrr.ecn_scheme=4
-</code></pre>
 To enable per-queue ECN marking:
 <pre><code>$ sysctl -w dwrr.ecn_scheme=1
 </code></pre>
+To enable per-port ECN marking:
+<pre><code>$ sysctl -w dwrr.ecn_scheme=2
+</code></pre>
+To enable MQ-ECN:
+<pre><code>$ sysctl -w dwrr.ecn_scheme=3
+</code></pre>
 </li>
+
 <li>Per-port ECN marking threshold (bytes):
 <pre><code>$ sysctl dwrr.port_thresh_bytes
 </code></pre>
 To set per-port ECN marking threshold to 32KB:
 <pre><code>$ sysctl -w dwrr.port_thresh_bytes=32000
+</code></pre>
+</li>
+
+<li>Per-queue ECN marking threshold (bytes) (i is queue index):
+<pre><code>$ sysctl dwrr.queue_thresh_bytes_i
+</code></pre>
+To set the marking threshold of queue 0 to 32KB:
+<pre><code>$ sysctl -w dwrr.queue_thresh_bytes_0=32000
+</code></pre>
+</li>
+
+<li>Per-port shared buffer size (bytes):
+<pre><code>$ sysctl dwrr.port_thresh_bytes
 </code></pre>
 </li>
 </ul>
