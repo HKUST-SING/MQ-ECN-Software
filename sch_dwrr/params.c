@@ -26,7 +26,7 @@ int DWRR_QDISC_DEBUG_MODE_MAX = DWRR_QDISC_DEBUG_ON;
 int DWRR_QDISC_BUFFER_MODE_MIN = DWRR_QDISC_SHARED_BUFFER;
 int DWRR_QDISC_BUFFER_MODE_MAX = DWRR_QDISC_STATIC_BUFFER;
 int DWRR_QDISC_ECN_SCHEME_MIN = DWRR_QDISC_DISABLE_ECN;
-int DWRR_QDISC_ECN_SCHEME_MAX = DWRR_QDISC_DEQUE_ECN;
+int DWRR_QDISC_ECN_SCHEME_MAX = DWRR_QDISC_MQ_ECN;
 int DWRR_QDISC_QUANTUM_ALPHA_MIN = 0;
 int DWRR_QDISC_QUANTUM_ALPHA_MAX = 1000;
 int DWRR_QDISC_ROUND_ALPHA_MIN = 0;
@@ -49,14 +49,14 @@ int DWRR_QDISC_QUEUE_BUFFER_BYTES[DWRR_QDISC_MAX_QUEUES];
 struct DWRR_QDISC_Param DWRR_QDISC_Params[9 + 4 * DWRR_QDISC_MAX_QUEUES + 1] =
 {
 	{"debug_mode", &DWRR_QDISC_DEBUG_MODE},
-	{"buffer_mode",&DWRR_QDISC_BUFFER_MODE},
+	{"buffer_mode", &DWRR_QDISC_BUFFER_MODE},
 	{"shared_buffer_bytes", &DWRR_QDISC_SHARED_BUFFER_BYTES},
 	{"bucket_ns", &DWRR_QDISC_BUCKET_NS},
 	{"port_thresh_bytes", &DWRR_QDISC_PORT_THRESH_BYTES},
-	{"ecn_scheme",&DWRR_QDISC_ECN_SCHEME},
-	{"quantum_alpha",&DWRR_QDISC_QUANTUM_ALPHA},
-	{"round_alpha",&DWRR_QDISC_ROUND_ALPHA},
-	{"idle_interval_ns",&DWRR_QDISC_IDLE_INTERVAL_NS},
+	{"ecn_scheme", &DWRR_QDISC_ECN_SCHEME},
+	{"quantum_alpha", &DWRR_QDISC_QUANTUM_ALPHA},
+	{"round_alpha", &DWRR_QDISC_ROUND_ALPHA},
+	{"idle_interval_ns", &DWRR_QDISC_IDLE_INTERVAL_NS},
 };
 
 struct ctl_table DWRR_QDISC_Params_table[9 + 4 * DWRR_QDISC_MAX_QUEUES + 1];
@@ -171,10 +171,10 @@ int dwrr_qdisc_params_init()
 	}
 
 	DWRR_QDISC_Sysctl = register_sysctl_paths(DWRR_QDISC_Params_path, DWRR_QDISC_Params_table);
-	if (unlikely(DWRR_QDISC_Sysctl == NULL))
-		return -1;
-	else
+	if (likely(DWRR_QDISC_Sysctl))
 		return 0;
+	else
+		return -1;
 
 }
 

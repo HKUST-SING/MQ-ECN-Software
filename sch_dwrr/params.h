@@ -28,12 +28,8 @@
 #define	DWRR_QDISC_QUEUE_ECN 1
 /* Per port ECN marking */
 #define DWRR_QDISC_PORT_ECN 2
-/* MQ-ECN for any packet scheduling algorithm */
-#define DWRR_QDISC_MQ_ECN_GENER 3
-/* MQ-ECN for round-robin packet scheduling algorithms */
-#define DWRR_QDISC_MQ_ECN_RR 4
-/* Dequeue latency-based ECN marking. This is a general ECN marking approach for any packet scheduler */
-#define DWRR_QDISC_DEQUE_ECN 5
+/* MQ-ECN */
+#define DWRR_QDISC_MQ_ECN 3
 
 #define DWRR_QDISC_MAX_ITERATION 10
 
@@ -71,7 +67,7 @@ struct DWRR_QDISC_Param
 	int *ptr;
 };
 
-extern struct DWRR_QDISC_Param DWRR_QDISC_Params[9+4*DWRR_QDISC_MAX_QUEUES+1];
+extern struct DWRR_QDISC_Param DWRR_QDISC_Params[9 + 4 * DWRR_QDISC_MAX_QUEUES + 1];
 
 /* Intialize parameters and register sysctl */
 int dwrr_qdisc_params_init(void);
