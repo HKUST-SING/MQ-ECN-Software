@@ -27,7 +27,7 @@ $ tc qdisc add dev eth1 root tbf rate 995mbit limit 1000k burst 1000k mtu 66000 
 In above example, we install MQ-ECN on eth1. The shaping rate is 995Mbps (line rate is 1000Mbps). To accurately reflect switch buffer occupancy, we usually trade a little bandwidth. 
 
 ##2.3 Configuring
-Except for shaping rate, all the parameters of MQ-ECN are configured through `sysctl` interfaces. Here, I only show several important parameters. For the reset, see `params.h` and `params.c` for more details.
+Except for shaping rate, all the parameters of MQ-ECN are configured through `sysctl` interfaces. Here, I only show several important parameters. For the rest, see `params.h` and `params.c` for more details.
 
 <ul>
 <li>ECN marking scheme:
@@ -47,16 +47,10 @@ To enable MQ-ECN:
 <li>Per-port ECN marking threshold (bytes):
 <pre><code>$ sysctl dwrr.port_thresh_bytes
 </code></pre>
-To set per-port ECN marking threshold to 32KB:
-<pre><code>$ sysctl -w dwrr.port_thresh_bytes=32000
-</code></pre>
 </li>
 
 <li>Per-queue ECN marking threshold (bytes) (i is queue index):
 <pre><code>$ sysctl dwrr.queue_thresh_bytes_i
-</code></pre>
-To set the marking threshold of queue 0 to 32KB:
-<pre><code>$ sysctl -w dwrr.queue_thresh_bytes_0=32000
 </code></pre>
 </li>
 
