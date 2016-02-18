@@ -132,7 +132,7 @@ static struct sk_buff* dwrr_qdisc_dequeue(struct Qdisc *sch)
 	while (1)
 	{
 		cl = list_first_entry(&q->activeList, struct dwrr_class, alist);
-		if (unlikely(cl == NULL))
+		if (unlikely(!cl))
 			return NULL;
 
 		/* update deficit counter for this round*/
@@ -144,7 +144,7 @@ static struct sk_buff* dwrr_qdisc_dequeue(struct Qdisc *sch)
 
 		/* get head packet */
 		skb = cl->qdisc->ops->peek(cl->qdisc);
-		if (unlikely(skb == NULL))
+		if (unlikely(!skb))
 		{
 			qdisc_warn_nonwc(__func__, cl->qdisc);
 			return NULL;
@@ -165,7 +165,7 @@ static struct sk_buff* dwrr_qdisc_dequeue(struct Qdisc *sch)
 			if (toks > pkt_ns)
 			{
 				skb = qdisc_dequeue_peeked(cl->qdisc);
-				if (unlikely(skb == NULL))
+				if (unlikely(!skb))
 					return NULL;
 
 				/* Print necessary information in debug mode */
@@ -186,7 +186,11 @@ static struct sk_buff* dwrr_qdisc_dequeue(struct Qdisc *sch)
 				{
 					cl->active = 0;
 					cl->curr = 0;
+					/* If we enable WRR, reset deficitCounter to 0 */
+					if (DWRR_QDISC_ENABLE_WRR == DWRR_QDISC_WRR_ON)
+						cl->deficitCounter = 0;
 					list_del(&cl->alist);
+
 					sample_ns = max_t(s64, cl->last_pkt_time_ns - cl->start_time_ns, cl->last_pkt_len_ns);
 					q->round_time_ns = (DWRR_QDISC_ROUND_ALPHA * q->round_time_ns + (1000 - DWRR_QDISC_ROUND_ALPHA) * sample_ns) / 1000;
 
@@ -226,6 +230,10 @@ static struct sk_buff* dwrr_qdisc_dequeue(struct Qdisc *sch)
 			q->round_time_ns = (DWRR_QDISC_ROUND_ALPHA * q->round_time_ns + (1000 - DWRR_QDISC_ROUND_ALPHA) * sample_ns) / 1000;
 			cl->start_time_ns = ktime_get_ns();
 			cl->quantum = DWRR_QDISC_QUEUE_QUANTUM[cl->id];
+			/* If we enable WRR, reset deficitCounter to 0 */
+			if (DWRR_QDISC_ENABLE_WRR == DWRR_QDISC_WRR_ON)
+				cl->deficitCounter = 0;
+
 			list_move_tail(&cl->alist, &q->activeList);
 
 			/* Print necessary information in debug mode with MQ-ECN */
@@ -278,7 +286,7 @@ static int dwrr_qdisc_enqueue(struct sk_buff *skb, struct Qdisc *sch)
 	cl = dwrr_qdisc_classify(skb,sch);
 
 	/* No appropriate queue or per port shared buffer is overfilled or per queue static buffer is overfilled */
-	if (cl == NULL
+	if (!cl
 	|| (DWRR_QDISC_BUFFER_MODE == DWRR_QDISC_SHARED_BUFFER && q->sum_len_bytes + len > DWRR_QDISC_SHARED_BUFFER_BYTES)
 	|| (DWRR_QDISC_BUFFER_MODE == DWRR_QDISC_STATIC_BUFFER && cl->len_bytes + len > DWRR_QDISC_QUEUE_BUFFER_BYTES[cl->id]))
 	{
@@ -389,7 +397,7 @@ static int dwrr_qdisc_change(struct Qdisc *sch, struct nlattr *opt)
 		return err;
 
 	err = -EINVAL;
-	if (tb[TCA_TBF_PARMS] == NULL)
+	if (!tb[TCA_TBF_PARMS])
 		goto done;
 
 	qopt = nla_data(tb[TCA_TBF_PARMS]);
@@ -415,7 +423,7 @@ static int dwrr_qdisc_init(struct Qdisc *sch, struct nlattr *opt)
 		return -EOPNOTSUPP;
 
 	q->queues = kcalloc(DWRR_QDISC_MAX_QUEUES, sizeof(struct dwrr_class), GFP_KERNEL);
-	if (q->queues == NULL)
+	if (!(q->queues))
 		return -ENOMEM;
 
 	q->tokens = 0;

@@ -33,6 +33,11 @@
 
 #define DWRR_QDISC_MAX_ITERATION 10
 
+/* Disable WRR */
+#define DWRR_QDISC_WRR_OFF 0
+/* Enable WRR */
+#define DWRR_QDISC_WRR_ON 1
+
 /* Debug mode or not */
 extern int DWRR_QDISC_DEBUG_MODE;
 /* Buffer management mode: shared (0) or static (1)*/
@@ -51,6 +56,8 @@ extern int DWRR_QDISC_QUANTUM_ALPHA;
 extern int DWRR_QDISC_ROUND_ALPHA;
 /* Idle time interval */
 extern int DWRR_QDISC_IDLE_INTERVAL_NS;
+/* Enable WRR or not */
+extern int DWRR_QDISC_ENABLE_WRR;
 
 /* Per queue ECN marking threshold (bytes) */
 extern int DWRR_QDISC_QUEUE_THRESH_BYTES[DWRR_QDISC_MAX_QUEUES];
@@ -67,7 +74,7 @@ struct DWRR_QDISC_Param
 	int *ptr;
 };
 
-extern struct DWRR_QDISC_Param DWRR_QDISC_Params[9 + 4 * DWRR_QDISC_MAX_QUEUES + 1];
+extern struct DWRR_QDISC_Param DWRR_QDISC_Params[10 + 4 * DWRR_QDISC_MAX_QUEUES + 1];
 
 /* Intialize parameters and register sysctl */
 int dwrr_qdisc_params_init(void);
