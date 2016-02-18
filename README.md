@@ -5,7 +5,7 @@ For more details about MQ-ECN, please refer to our NSDI 2016 <a href="http://sin
 
 #2 How to use
 ##2.1 Compiling
-MQ-ECN software prototype is implemented as a Linux queuing discpline (qdisc) kernel module. So you need the kernel headers to compile it. You can find available headers on your system in `/lib/modules`. To install the kernel headers, you just need to use the following command：
+MQ-ECN software prototype is implemented as a Linux queuing discpline (qdisc) kernel module, running on multi-NIC servers to emulate switch hardware behaviors. So you need the kernel headers to compile it. You can find available headers on your system in `/lib/modules`. To install the kernel headers, you just need to use the following command：
 <pre><code>$ apt-get install linux-headers-$(uname -r)
 </code></pre>
 
@@ -26,7 +26,14 @@ $ tc qdisc add dev eth1 root tbf rate 995mbit limit 1000k burst 1000k mtu 66000 
 
 In above example, we install MQ-ECN on eth1. The shaping rate is 995Mbps (line rate is 1000Mbps). To accurately reflect switch buffer occupancy, we usually trade a little bandwidth. 
 
-##2.3 Configuring
+##2.3 Note
+To better emulate real switch hardware behaviors, we should avoid large sergments on server-emulated software switches. Hence, we need to disable related offloading techniques on all involved NICs. For example, to disable offloading on eth0: 
+<pre><code>$ ethtool -K eth0 tso off
+$ ethtool -K eth0 gso off
+$ ethtool -K eth0 gro off
+</code></pre>
+
+##2.4 Configuring
 Except for shaping rate, all the parameters of MQ-ECN are configured through `sysctl` interfaces. Here, I only show several important parameters. For the rest, see `params.h` and `params.c` for more details.
 
 <ul>
@@ -59,3 +66,8 @@ To enable MQ-ECN:
 </code></pre>
 </li>
 </ul>
+
+##2.5 WRR
+By default, MQ-ECN kernel module performs Deficit Weighted Round Robin (DWRR) scheduling algorithm. You can also enable Weighted Round Robin (WRR) as follows:
+<pre><code>$ sysctl -w dwrr.enable_wrr=1
+</code></pre>
