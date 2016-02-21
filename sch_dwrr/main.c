@@ -123,6 +123,7 @@ static struct sk_buff* dwrr_qdisc_dequeue(struct Qdisc *sch)
 	struct dwrr_class *cl = NULL;
 	struct sk_buff *skb = NULL;
 	s64 sample_ns = 0;
+	u64 ecn_thresh_bytes = 0;
 	unsigned int len;
 
 	/* No active queue */
@@ -181,6 +182,32 @@ static struct sk_buff* dwrr_qdisc_dequeue(struct Qdisc *sch)
 				cl->deficitCounter -= len;
 				cl->last_pkt_len_ns = pkt_ns;
 				cl->last_pkt_time_ns = ktime_get_ns();
+
+				/* Perform dequeue ECN marking */
+				if (DWRR_QDISC_ENABLE_DEQUEUE_ECN == DWRR_QDISC_DEQUEUE_ECN_ON)
+				{
+					/* Per-queue ECN marking */
+					if (DWRR_QDISC_ECN_SCHEME == DWRR_QDISC_QUEUE_ECN && cl->len_bytes > DWRR_QDISC_QUEUE_THRESH_BYTES[cl->id])
+						//printk(KERN_INFO "ECN marking\n");
+						dwrr_qdisc_ecn(skb);
+					/* Per-port ECN marking */
+					else if (DWRR_QDISC_ECN_SCHEME == DWRR_QDISC_PORT_ECN && q->sum_len_bytes > DWRR_QDISC_PORT_THRESH_BYTES)
+						dwrr_qdisc_ecn(skb);
+					/* MQ-ECN for round robin algorithms */
+					else if (DWRR_QDISC_ECN_SCHEME == DWRR_QDISC_MQ_ECN)
+					{
+						if (q->round_time_ns > 0)
+							ecn_thresh_bytes = min_t(u64, cl->quantum * 8000000000 / q->round_time_ns, q->rate.rate_bps) * DWRR_QDISC_PORT_THRESH_BYTES / q->rate.rate_bps;
+						else
+							ecn_thresh_bytes = DWRR_QDISC_PORT_THRESH_BYTES;
+
+						if (cl->len_bytes > ecn_thresh_bytes)
+							dwrr_qdisc_ecn(skb);
+
+						if (DWRR_QDISC_DEBUG_MODE == DWRR_QDISC_DEBUG_ON)
+							printk(KERN_INFO "queue %d quantum %u ECN threshold %llu\n", cl->id, cl->quantum, ecn_thresh_bytes);
+					}
+				}
 
 				if (cl->qdisc->q.qlen == 0)
 				{
@@ -315,26 +342,30 @@ static int dwrr_qdisc_enqueue(struct sk_buff *skb, struct Qdisc *sch)
 				list_add_tail(&(cl->alist), &(q->activeList));
 			}
 
-			/* Per-queue ECN marking */
-			if (DWRR_QDISC_ECN_SCHEME == DWRR_QDISC_QUEUE_ECN && cl->len_bytes > DWRR_QDISC_QUEUE_THRESH_BYTES[cl->id])
-				//printk(KERN_INFO "ECN marking\n");
-				dwrr_qdisc_ecn(skb);
-			/* Per-port ECN marking */
-			else if (DWRR_QDISC_ECN_SCHEME == DWRR_QDISC_PORT_ECN && q->sum_len_bytes > DWRR_QDISC_PORT_THRESH_BYTES)
-				dwrr_qdisc_ecn(skb);
-			/* MQ-ECN for round robin algorithms */
-			else if (DWRR_QDISC_ECN_SCHEME == DWRR_QDISC_MQ_ECN)
+			/* Perform enqueue ECN marking */
+			if (DWRR_QDISC_ENABLE_DEQUEUE_ECN == DWRR_QDISC_DEQUEUE_ECN_OFF)
 			{
-				if (q->round_time_ns > 0)
-					ecn_thresh_bytes = min_t(u64, cl->quantum * 8000000000 / q->round_time_ns, q->rate.rate_bps) * DWRR_QDISC_PORT_THRESH_BYTES / q->rate.rate_bps;
-				else
-					ecn_thresh_bytes = DWRR_QDISC_PORT_THRESH_BYTES;
-
-				if (cl->len_bytes > ecn_thresh_bytes)
+				/* Per-queue ECN marking */
+				if (DWRR_QDISC_ECN_SCHEME == DWRR_QDISC_QUEUE_ECN && cl->len_bytes > DWRR_QDISC_QUEUE_THRESH_BYTES[cl->id])
+					//printk(KERN_INFO "ECN marking\n");
 					dwrr_qdisc_ecn(skb);
+				/* Per-port ECN marking */
+				else if (DWRR_QDISC_ECN_SCHEME == DWRR_QDISC_PORT_ECN && q->sum_len_bytes > DWRR_QDISC_PORT_THRESH_BYTES)
+					dwrr_qdisc_ecn(skb);
+				/* MQ-ECN for round robin algorithms */
+				else if (DWRR_QDISC_ECN_SCHEME == DWRR_QDISC_MQ_ECN)
+				{
+					if (q->round_time_ns > 0)
+						ecn_thresh_bytes = min_t(u64, cl->quantum * 8000000000 / q->round_time_ns, q->rate.rate_bps) * DWRR_QDISC_PORT_THRESH_BYTES / q->rate.rate_bps;
+					else
+						ecn_thresh_bytes = DWRR_QDISC_PORT_THRESH_BYTES;
 
-				if (DWRR_QDISC_DEBUG_MODE == DWRR_QDISC_DEBUG_ON)
-					printk(KERN_INFO "queue %d quantum %u ECN threshold %llu\n", cl->id, cl->quantum, ecn_thresh_bytes);
+					if (cl->len_bytes > ecn_thresh_bytes)
+						dwrr_qdisc_ecn(skb);
+
+					if (DWRR_QDISC_DEBUG_MODE == DWRR_QDISC_DEBUG_ON)
+						printk(KERN_INFO "queue %d quantum %u ECN threshold %llu\n", cl->id, cl->quantum, ecn_thresh_bytes);
+				}
 			}
 		}
 		else
@@ -471,7 +502,7 @@ static struct Qdisc_ops dwrr_qdisc_ops __read_mostly = {
 	.destroy = dwrr_qdisc_destroy,
 	.enqueue = dwrr_qdisc_enqueue,
 	.dequeue = dwrr_qdisc_dequeue,
-	.peek=dwrr_qdisc_peek,
+	.peek = dwrr_qdisc_peek,
 	.drop = dwrr_qdisc_drop,
 	.change = dwrr_qdisc_change,
 	.dump = dwrr_qdisc_dump,
