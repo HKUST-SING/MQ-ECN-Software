@@ -17,11 +17,16 @@ $ make
 This will produce a kernel module called `sch_dwrr.ko`. I have tested it with Linux kernel 3.18.11. MQ-ECN kernel module is built on the top of <a href="http://lxr.free-electrons.com/source/net/sched/sch_tbf.c">Token Bucket Filter (tbf)</a> and <a href="http://lxr.free-electrons.com/source/net/sched/sch_drr.c">Deficit Round Robin (drr) scheduler</a> in Linux kernel. 
 
 ##2.2 Installing
-MQ-ECN replaces token bucket rate limiter module so you can use your existing `tc` tool to install MQ-ECN. So you need to remove `tbf` before you can use MQ-ECN. To install MQ-ECN on a device:
+MQ-ECN replaces token bucket rate limiter module. Hence, you need to remove `sch_tbf` before installing MQ-ECN. To install MQ-ECN on a device (e.g., eth1):
 
 <pre><code>$ rmmod sch_tbf
 $ insmod sch_dwrr.ko
 $ tc qdisc add dev eth1 root tbf rate 995mbit limit 1000k burst 1000k mtu 66000 peakrate 1000mbit
+</code></pre>
+
+To remove MQ-ECN on a device (e.g., eth1):
+<pre><code>$ tc qdisc del dev eth1 root
+$ rmmod sch_dwrr
 </code></pre>
 
 In above example, we install MQ-ECN on eth1. The shaping rate is 995Mbps (line rate is 1000Mbps). To accurately reflect switch buffer occupancy, we usually trade a little bandwidth. 
