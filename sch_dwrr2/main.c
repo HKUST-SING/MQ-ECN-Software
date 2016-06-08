@@ -467,7 +467,8 @@ static int dwrr_enqueue(struct sk_buff *skb, struct Qdisc *sch)
 		list_add_tail(&(cl->alist), &(q->active));
 	}
 
-	dwrr_ecn_marking(skb, q, cl);
+	if (dwrr_enable_dequeue_ecn == dwrr_disable)
+		dwrr_ecn_marking(skb, q, cl);
 	return ret;
 }
 
@@ -596,7 +597,7 @@ static struct Qdisc_ops dwrr_ops __read_mostly = {
 	.drop		=	dwrr_drop,
 	.change		=	dwrr_change,
 	.dump		=	dwrr_dump,
-	.owner = THIS_MODULE,
+	.owner		=	THIS_MODULE,
 };
 
 static int __init dwrr_module_init(void)
