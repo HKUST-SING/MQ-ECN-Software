@@ -341,7 +341,7 @@ static struct sk_buff *dwrr_dequeue(struct Qdisc *sch)
 			if (cl->qdisc->q.qlen == 0)
 			{
 				list_del(&cl->alist);
-				sample = cl->last_pkt_time - cl->start_time,
+				sample = cl->last_pkt_time - cl->start_time;
 				q->round_time = s64_ewma(q->round_time,
 							sample, dwrr_round_alpha, dwrr_round_alpha_shift);
 
