@@ -67,7 +67,7 @@ To enable MQ-ECN:
 </li>
 
 <li>Per-port shared buffer size (bytes):
-<pre><code>$ sysctl dwrr.port_thresh_bytes
+<pre><code>$ sysctl dwrr.shared_buffer_bytes
 </code></pre>
 </li>
 </ul>
