@@ -5,7 +5,7 @@ For more details about MQ-ECN, please refer to our NSDI 2016 <a href="http://sin
 
 #2 How to use
 ##2.1 Compiling
-MQ-ECN software prototype is implemented as a Linux queuing discpline (qdisc) kernel module, running on multi-NIC servers to emulate switch hardware behaviors. So you need the kernel headers to compile it. You can find available headers on your system in `/lib/modules`. To install the kernel headers, you just need to use the following command：
+MQ-ECN software prototype is implemented as a Linux queuing discipline (qdisc) kernel module, running on multi-NIC servers to emulate switch hardware behaviors. So you need the kernel headers to compile it. You can find available headers on your system in `/lib/modules`. To install the kernel headers, you just need to use the following command：
 <pre><code>$ apt-get install linux-headers-$(uname -r)
 </code></pre>
 
@@ -32,7 +32,7 @@ $ rmmod sch_dwrr
 In above example, we install MQ-ECN on eth1. The shaping rate is 995Mbps (line rate is 1000Mbps). To accurately reflect switch buffer occupancy, we usually trade a little bandwidth. 
 
 ##2.3 Note
-To better emulate real switch hardware behaviors, we should avoid large sergments on server-emulated software switches. Hence, we need to disable related offloading techniques on all involved NICs. For example, to disable offloading on eth0: 
+To better emulate real switch hardware behaviors, we should avoid large segments on server-emulated software switches. Hence, we need to disable related offloading techniques on all involved NICs. For example, to disable offloading on eth0: 
 <pre><code>$ ethtool -K eth0 tso off
 $ ethtool -K eth0 gso off
 $ ethtool -K eth0 gro off
